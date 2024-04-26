@@ -13,8 +13,8 @@ use winit::{
 };
 use winit_input_helper::WinitInputHelper;
 
-const WIDTH: u32 = 1000;
-const HEIGHT: u32 = 1000;
+const WIDTH: u32 = 500;
+const HEIGHT: u32 = 500;
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -32,12 +32,12 @@ fn main() -> Result<()> {
     // };
 
     let window = {
-        // let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
-        // let scaled_size = LogicalSize::new(WIDTH as f64 * 3.0, HEIGHT as f64 * 3.0);
+        let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
+        let scaled_size = LogicalSize::new(WIDTH as f64 * 3.0, HEIGHT as f64 * 3.0);
         WindowBuilder::new()
             .with_title("Conway's Game of Life")
-            // .with_inner_size(scaled_size)
-            // .with_min_inner_size(size)
+            .with_inner_size(scaled_size)
+            .with_min_inner_size(size)
             .build(&event_loop)
             .unwrap()
     };

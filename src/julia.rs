@@ -21,11 +21,13 @@ fn calc_escape(iteration_bound: i32, offset: Imaginary) -> EscapeResult {
 fn calc_pixel(pixel: (u32, u32), dimension: u32) -> (u8, u8, u8) {
     // Display is between -2, 2 on both axes. Determine the size of each pixel, then get a value
 
-    let pixel_size = 4.0 / f64::from(dimension);
+    let f64_dimension: f64 = dimension.into();
+
+    let pixel_size = 4.0 / f64_dimension;
 
     let equivalent_imaginary = Imaginary {
-        real: pixel.0 as f64 * pixel_size,
-        i: pixel.1 as f64 * pixel_size,
+        real: (pixel.0 as f64 * pixel_size) - 2.0,
+        i: (pixel.1 as f64 * pixel_size) - 2.0,
     };
 
     match calc_escape(50, equivalent_imaginary) {
@@ -39,8 +41,8 @@ pub fn draw(frame: &mut [u8], width: u32, height: u32) {
         let idx_signed = idx as i32;
         let width_signed = width as i32;
         let height_signed = height as i32;
-        let x = idx_signed % width_signed - width_signed / 2;
-        let y = idx_signed / width_signed - height_signed / 2;
+        let x = idx_signed % width_signed;
+        let y = idx_signed / width_signed;
 
         let (r, g, b) = calc_pixel((x as u32, y as u32), width);
         pixel.copy_from_slice(&[r, g, b, 255])
