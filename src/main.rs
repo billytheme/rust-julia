@@ -55,7 +55,7 @@ fn main() -> Result<()> {
             event: WindowEvent::RedrawRequested,
         } = event
         {
-            julia::draw(pixels.frame_mut(), WIDTH, HEIGHT);
+            draw(pixels.frame_mut(), WIDTH, HEIGHT);
             if let Err(err) = pixels.render() {
                 log_error("pixels.render", err);
                 control_flow.exit();
@@ -88,6 +88,19 @@ fn main() -> Result<()> {
 
     println!("Hello, world!");
     Ok(())
+}
+
+fn draw(frame: &mut [u8], width: u32, height: u32) {
+    for (idx, pixel) in frame.chunks_exact_mut(4).enumerate() {
+        let idx_signed = idx as i32;
+        let width_signed = width as i32;
+        let height_signed = height as i32;
+        let x = idx_signed % width_signed;
+        let y = idx_signed / width_signed;
+
+        let (r, g, b) = julia::calc_pixel((x as u32, y as u32), width);
+        pixel.copy_from_slice(&[r, g, b, 255])
+    }
 }
 
 fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
