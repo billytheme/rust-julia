@@ -18,6 +18,35 @@ fn calc_escape(iteration_bound: i32, offset: Imaginary) -> EscapeResult {
     return EscapeResult::Bounded;
 }
 
+fn calc_pixel(pixel: (u32, u32), dimension: u32) -> (u8, u8, u8) {
+    // Display is between -2, 2 on both axes. Determine the size of each pixel, then get a value
+
+    let pixel_size = 4.0 / f64::from(dimension);
+
+    let equivalent_imaginary = Imaginary {
+        real: pixel.0 as f64 * pixel_size,
+        i: pixel.1 as f64 * pixel_size,
+    };
+
+    match calc_escape(50, equivalent_imaginary) {
+        EscapeResult::Bounded => (0, 0, 0),
+        EscapeResult::Escaped(_) => (255, 255, 255),
+    }
+}
+
+pub fn draw(frame: &mut [u8], width: u32, height: u32) {
+    for (idx, pixel) in frame.chunks_exact_mut(4).enumerate() {
+        let idx_signed = idx as i32;
+        let width_signed = width as i32;
+        let height_signed = height as i32;
+        let x = idx_signed % width_signed - width_signed / 2;
+        let y = idx_signed / width_signed - height_signed / 2;
+
+        let (r, g, b) = calc_pixel((x as u32, y as u32), width);
+        pixel.copy_from_slice(&[r, g, b, 255])
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
