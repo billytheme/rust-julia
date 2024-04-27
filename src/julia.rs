@@ -25,7 +25,7 @@ fn calc_escape(iteration_bound: u32, offset: Imaginary) -> EscapeResult {
             _ => continue,
         }
     }
-    return EscapeResult::Bounded;
+    EscapeResult::Bounded
 }
 
 pub fn calc_pixel(
@@ -43,7 +43,7 @@ pub fn calc_pixel(
     let iteration_bound = 500;
 
     // num_subsamples is in each direction, so the actual number of samples is num_subsamples**2
-    let num_subsamples = 5;
+    let num_subsamples = 3;
     let mut subsamples = vec![];
     let sub_pixel_size = pixel_size / (num_subsamples + 1) as f64;
 
@@ -84,7 +84,8 @@ pub fn calc_pixel(
     mean_total.0 /= num_subsamples * num_subsamples;
     mean_total.1 /= num_subsamples * num_subsamples;
     mean_total.2 /= num_subsamples * num_subsamples;
-    return (mean_total.0 as u8, mean_total.1 as u8, mean_total.2 as u8);
+
+    (mean_total.0 as u8, mean_total.1 as u8, mean_total.2 as u8)
 }
 
 // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
@@ -99,19 +100,19 @@ fn hsv_to_rgb(color: (f64, f64, f64)) -> (u8, u8, u8) {
     let h1 = ((h % 1.0) * 6.0) as u8;
 
     let rgb = match h1 {
-        val if val == 0 => (c, x, 0.0),
-        val if val == 1 => (x, c, 0.0),
-        val if val == 2 => (0.0, c, x),
-        val if val == 3 => (0.0, x, c),
-        val if val == 4 => (x, 0.0, c),
+        0 => (c, x, 0.0),
+        1 => (x, c, 0.0),
+        2 => (0.0, c, x),
+        3 => (0.0, x, c),
+        4 => (x, 0.0, c),
         _ => (c, 0.0, x),
     };
 
-    return (
+    (
         ((rgb.0 + m) * 255.0).round() as u8,
         ((rgb.1 + m) * 255.0).round() as u8,
         ((rgb.2 + m) * 255.0).round() as u8,
-    );
+    )
 }
 
 #[cfg(test)]
