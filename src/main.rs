@@ -100,7 +100,7 @@ fn draw(frame: &mut [u8], width: u32, height: u32) {
 
         let (r, g, b) = julia::calc_pixel(
             (x as u32, y as u32),
-            width,
+            (width, height),
             3.0,
             Imaginary { real: 2.0, i: 2.0 },
         );

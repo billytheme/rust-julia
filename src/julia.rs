@@ -28,22 +28,26 @@ fn calc_escape(iteration_bound: u32, offset: Imaginary) -> EscapeResult {
     EscapeResult::Bounded
 }
 
+/// Calculates the RGB value of a pixel
+/// pixel: coordinates in image space, between 0 and dimension
+/// dimension: the dimensions of the image
+/// horizontal_scale: the distance in imaginary units from one side of the dimension to the other. A standard mandlebrot goes from -2 - 2
+/// offset: an imaginary number specifying the centre of the image
 pub fn calc_pixel(
     pixel: (u32, u32),
-    dimension: u32,
-    cross_section: f64,
+    dimension: (u32, u32),
+    horizontal_scale: f64,
     offset: Imaginary,
 ) -> (u8, u8, u8) {
-    // Display is between -2, 2 on both axes. Determine the size of each pixel, then get a value
+    assert!(pixel.0 < dimension.0);
+    assert!(pixel.1 < dimension.1);
 
-    let f64_dimension: f64 = dimension.into();
-
-    let pixel_size = cross_section / f64_dimension;
+    let pixel_size = horizontal_scale / dimension.1 as f64;
 
     let iteration_bound = 500;
 
     // num_subsamples is in each direction, so the actual number of samples is num_subsamples**2
-    let num_subsamples = 3;
+    let num_subsamples = 2;
     let mut subsamples = vec![];
     let sub_pixel_size = pixel_size / (num_subsamples + 1) as f64;
 
@@ -51,9 +55,9 @@ pub fn calc_pixel(
         for y_pixel_fraction in 1..=num_subsamples {
             let equivalent_imaginary = Imaginary {
                 real: (pixel.0 as f64 * pixel_size + x_pixel_fraction as f64 * sub_pixel_size)
-                    - offset.real * (cross_section / 4.0),
+                    - offset.real * (horizontal_scale / 4.0),
                 i: (pixel.1 as f64 * pixel_size + y_pixel_fraction as f64 * sub_pixel_size)
-                    - offset.i * (cross_section / 4.0),
+                    - offset.i * (horizontal_scale / 4.0),
             };
 
             let subsample_result = match calc_escape(iteration_bound, equivalent_imaginary) {
