@@ -13,8 +13,8 @@ enum EscapeResult {
 fn calc_escape(iteration_bound: u32, offset: Imaginary) -> EscapeResult {
     let mut val = Imaginary { real: 0.0, i: 0.0 };
     for iteration in 1..iteration_bound {
-        val = val * val;
-        val = val + offset;
+        val = &val * &val;
+        val = &val + &offset;
         match val {
             _ if val.absolute() > 2.0 => {
                 return EscapeResult::Escaped {
@@ -48,11 +48,14 @@ pub fn calc_pixel(
 
     // num_subsamples is in each direction, so the actual number of samples is num_subsamples**2
     let num_subsamples = 2;
-    let mut subsamples = vec![];
+    // let mut subsamples = vec![];
     let sub_pixel_size = pixel_size / (num_subsamples + 1) as f64;
 
-    for x_pixel_fraction in 1..=num_subsamples {
-        for y_pixel_fraction in 1..=num_subsamples {
+    let (r, g, b, num) = (1..=num_subsamples)
+        .flat_map(|x_pixel_fraction| {
+            (1..=num_subsamples).map(move |y_pixel_fraction| (x_pixel_fraction, y_pixel_fraction))
+        })
+        .map(|(x_pixel_fraction, y_pixel_fraction)| {
             let equivalent_imaginary = Imaginary {
                 real: (pixel.0 as f64 * pixel_size + x_pixel_fraction as f64 * sub_pixel_size)
                     - offset.real * (horizontal_scale / 4.0),
@@ -60,7 +63,7 @@ pub fn calc_pixel(
                     - offset.i * (horizontal_scale / 4.0),
             };
 
-            let subsample_result = match calc_escape(iteration_bound, equivalent_imaginary) {
+            match calc_escape(iteration_bound, equivalent_imaginary) {
                 EscapeResult::Bounded => (u8::MIN, u8::MIN, u8::MIN),
                 EscapeResult::Escaped {
                     iter_count,
@@ -73,23 +76,58 @@ pub fn calc_pixel(
                     hsv_to_rgb((0.95 + 10.0 * scaled_val, 0.6, 1.0))
                     // (scaled_val, scaled_val, 255)
                 }
-            };
+            }
+        })
+        .fold((0, 0, 0, 0 as u32), |acc, elem| {
+            (
+                acc.0 + elem.0 as u32,
+                acc.1 + elem.1 as u32,
+                acc.2 + elem.2 as u32,
+                acc.3 + 1,
+            )
+        });
 
-            subsamples.push(subsample_result);
-        }
-    }
+    ((r / num) as u8, (g / num) as u8, (b / num) as u8)
 
-    let mut mean_total: (u32, u32, u32) = (0, 0, 0);
-    for sample in subsamples {
-        mean_total.0 += sample.0 as u32;
-        mean_total.1 += sample.1 as u32;
-        mean_total.2 += sample.2 as u32;
-    }
-    mean_total.0 /= num_subsamples * num_subsamples;
-    mean_total.1 /= num_subsamples * num_subsamples;
-    mean_total.2 /= num_subsamples * num_subsamples;
+    // for x_pixel_fraction in 1..=num_subsamples {
+    //     for y_pixel_fraction in 1..=num_subsamples {
+    //         let equivalent_imaginary = Imaginary {
+    //             real: (pixel.0 as f64 * pixel_size + x_pixel_fraction as f64 * sub_pixel_size)
+    //                 - offset.real * (horizontal_scale / 4.0),
+    //             i: (pixel.1 as f64 * pixel_size + y_pixel_fraction as f64 * sub_pixel_size)
+    //                 - offset.i * (horizontal_scale / 4.0),
+    //         };
 
-    (mean_total.0 as u8, mean_total.1 as u8, mean_total.2 as u8)
+    //         let subsample_result = match calc_escape(iteration_bound, equivalent_imaginary) {
+    //             EscapeResult::Bounded => (u8::MIN, u8::MIN, u8::MIN),
+    //             EscapeResult::Escaped {
+    //                 iter_count,
+    //                 final_val,
+    //             } => {
+    //                 // https://stackoverflow.com/questions/369438/smooth-spectrum-for-mandelbrot-set-rendering
+    //                 let smoothed_iters = iter_count as f64
+    //                     - f64::log(f64::log(final_val.absolute(), E), E) / f64::log(2.0, E);
+    //                 let scaled_val = smoothed_iters / iteration_bound as f64;
+    //                 hsv_to_rgb((0.95 + 10.0 * scaled_val, 0.6, 1.0))
+    //                 // (scaled_val, scaled_val, 255)
+    //             }
+    //         };
+
+    //         subsamples.push(subsample_result);
+    //     }
+    // }
+
+    // let mut mean_total: (u32, u32, u32) = (0, 0, 0);
+    // for sample in subsamples {
+    //     mean_total.0 += sample.0 as u32;
+    //     mean_total.1 += sample.1 as u32;
+    //     mean_total.2 += sample.2 as u32;
+    // }
+    // mean_total.0 /= num_subsamples * num_subsamples;
+    // mean_total.1 /= num_subsamples * num_subsamples;
+    // mean_total.2 /= num_subsamples * num_subsamples;
+
+    // (mean_total.0 as u8, mean_total.1 as u8, mean_total.2 as u8)
 }
 
 // https://www.rapidtables.com/convert/color/hsv-to-rgb.html

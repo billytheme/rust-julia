@@ -1,27 +1,27 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug)]
 pub struct Imaginary {
     pub real: f64,
     pub i: f64,
 }
 
 impl Imaginary {
-    pub fn conjugate(self) -> Imaginary {
+    pub fn conjugate(&self) -> Imaginary {
         Imaginary {
             real: self.real,
             i: -self.i,
         }
     }
-    pub fn absolute(self) -> f64 {
+    pub fn absolute(&self) -> f64 {
         // https://www.quora.com/How-do-I-find-the-magnitude-of-a-complex-number-for-example-5-5i
-        let magnitude = self * self.conjugate();
+        let magnitude = &self.conjugate() * self;
         assert!(magnitude.i == 0.0);
         magnitude.real.sqrt()
     }
 }
 
-impl Add for Imaginary {
+impl Add for &Imaginary {
     type Output = Imaginary;
     fn add(self, rhs: Self) -> Self::Output {
         Imaginary {
@@ -31,7 +31,7 @@ impl Add for Imaginary {
     }
 }
 
-impl Sub for Imaginary {
+impl Sub for &Imaginary {
     type Output = Imaginary;
     fn sub(self, rhs: Self) -> Self::Output {
         Imaginary {
@@ -41,7 +41,7 @@ impl Sub for Imaginary {
     }
 }
 
-impl Mul for Imaginary {
+impl Mul for &Imaginary {
     type Output = Imaginary;
     fn mul(self, rhs: Self) -> Self::Output {
         // https://www.cuemath.com/numbers/multiplying-complex-numbers/
@@ -52,7 +52,7 @@ impl Mul for Imaginary {
     }
 }
 
-impl Div for Imaginary {
+impl Div for &Imaginary {
     type Output = Imaginary;
     fn div(self, rhs: Self) -> Self::Output {
         // https://www.cuemath.com/numbers/division-of-complex-numbers/
@@ -72,14 +72,14 @@ mod tests {
     fn test_addition() {
         let num1 = Imaginary { real: 3.0, i: 2.0 };
         let num2 = Imaginary { real: 1.0, i: 7.0 };
-        assert_eq!(num1 + num2, Imaginary { real: 4.0, i: 9.0 })
+        assert_eq!(&num1 + &num2, Imaginary { real: 4.0, i: 9.0 })
     }
 
     #[test]
     fn test_subtraction() {
         let num1 = Imaginary { real: 3.0, i: 2.0 };
         let num2 = Imaginary { real: 1.0, i: 7.0 };
-        assert_eq!(num1 - num2, Imaginary { real: 2.0, i: -5.0 })
+        assert_eq!(&num1 - &num2, Imaginary { real: 2.0, i: -5.0 })
     }
 
     #[test]
@@ -87,7 +87,7 @@ mod tests {
         let num1 = Imaginary { real: 3.0, i: 2.0 };
         let num2 = Imaginary { real: 1.0, i: 7.0 };
         assert_eq!(
-            num1 * num2,
+            &num1 * &num2,
             Imaginary {
                 real: -11.0,
                 i: 23.0
@@ -102,6 +102,6 @@ mod tests {
             i: 23.0,
         };
         let num2 = Imaginary { real: 1.0, i: 7.0 };
-        assert_eq!(num1 / num2, Imaginary { real: 3.0, i: 2.0 })
+        assert_eq!(&num1 / &num2, Imaginary { real: 3.0, i: 2.0 })
     }
 }
