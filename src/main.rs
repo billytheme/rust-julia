@@ -3,6 +3,7 @@ mod julia;
 
 use color_eyre::eyre::Result;
 use imaginary::Imaginary;
+use julia::calc_frame;
 use pixels::{Pixels, SurfaceTexture};
 use tracing::error;
 use winit::{
@@ -91,20 +92,11 @@ fn main() -> Result<()> {
 }
 
 fn draw(frame: &mut [u8], width: u32, height: u32) {
+    let render = calc_frame(&(width, height), &3.0, &Imaginary { real: 2.0, i: 2.0 });
     for (idx, pixel) in frame.chunks_exact_mut(4).enumerate() {
-        let idx_signed = idx as i32;
-        let width_signed = width as i32;
-        let height_signed = height as i32;
-        let x = idx_signed % width_signed;
-        let y = idx_signed / width_signed;
-
-        let (r, g, b) = julia::calc_pixel(
-            (x as u32, y as u32),
-            (width, height),
-            3.0,
-            Imaginary { real: 2.0, i: 2.0 },
-        );
-        pixel.copy_from_slice(&[r, g, b, u8::MAX])
+        if let Some((r, g, b)) = render.get(idx) {
+            pixel.copy_from_slice(&[*r, *g, *b, u8::MAX])
+        }
     }
 }
 

@@ -1429,6 +1429,7 @@ dependencies = [
  "color-eyre",
  "criterion",
  "pixels",
+ "rayon",
  "tracing",
  "tracing-subscriber",
  "winit",

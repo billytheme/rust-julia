@@ -1,6 +1,7 @@
 use std::f64::consts::E;
 
 use crate::imaginary::Imaginary;
+use rayon::prelude::*;
 
 enum EscapeResult {
     Bounded,
@@ -33,11 +34,11 @@ fn calc_escape(iteration_bound: u32, offset: Imaginary) -> EscapeResult {
 /// dimension: the dimensions of the image
 /// horizontal_scale: the distance in imaginary units from one side of the dimension to the other. A standard mandlebrot goes from -2 - 2
 /// offset: an imaginary number specifying the centre of the image
-pub fn calc_pixel(
-    pixel: (u32, u32),
-    dimension: (u32, u32),
-    horizontal_scale: f64,
-    offset: Imaginary,
+fn calc_pixel(
+    pixel: &(u32, u32),
+    dimension: &(u32, u32),
+    horizontal_scale: &f64,
+    offset: &Imaginary,
 ) -> (u8, u8, u8) {
     assert!(pixel.0 < dimension.0);
     assert!(pixel.1 < dimension.1);
@@ -88,46 +89,18 @@ pub fn calc_pixel(
         });
 
     ((r / num) as u8, (g / num) as u8, (b / num) as u8)
+}
 
-    // for x_pixel_fraction in 1..=num_subsamples {
-    //     for y_pixel_fraction in 1..=num_subsamples {
-    //         let equivalent_imaginary = Imaginary {
-    //             real: (pixel.0 as f64 * pixel_size + x_pixel_fraction as f64 * sub_pixel_size)
-    //                 - offset.real * (horizontal_scale / 4.0),
-    //             i: (pixel.1 as f64 * pixel_size + y_pixel_fraction as f64 * sub_pixel_size)
-    //                 - offset.i * (horizontal_scale / 4.0),
-    //         };
-
-    //         let subsample_result = match calc_escape(iteration_bound, equivalent_imaginary) {
-    //             EscapeResult::Bounded => (u8::MIN, u8::MIN, u8::MIN),
-    //             EscapeResult::Escaped {
-    //                 iter_count,
-    //                 final_val,
-    //             } => {
-    //                 // https://stackoverflow.com/questions/369438/smooth-spectrum-for-mandelbrot-set-rendering
-    //                 let smoothed_iters = iter_count as f64
-    //                     - f64::log(f64::log(final_val.absolute(), E), E) / f64::log(2.0, E);
-    //                 let scaled_val = smoothed_iters / iteration_bound as f64;
-    //                 hsv_to_rgb((0.95 + 10.0 * scaled_val, 0.6, 1.0))
-    //                 // (scaled_val, scaled_val, 255)
-    //             }
-    //         };
-
-    //         subsamples.push(subsample_result);
-    //     }
-    // }
-
-    // let mut mean_total: (u32, u32, u32) = (0, 0, 0);
-    // for sample in subsamples {
-    //     mean_total.0 += sample.0 as u32;
-    //     mean_total.1 += sample.1 as u32;
-    //     mean_total.2 += sample.2 as u32;
-    // }
-    // mean_total.0 /= num_subsamples * num_subsamples;
-    // mean_total.1 /= num_subsamples * num_subsamples;
-    // mean_total.2 /= num_subsamples * num_subsamples;
-
-    // (mean_total.0 as u8, mean_total.1 as u8, mean_total.2 as u8)
+pub fn calc_frame(
+    dimension: &(u32, u32),
+    horizontal_scale: &f64,
+    offset: &Imaginary,
+) -> Vec<(u8, u8, u8)> {
+    (0..dimension.0)
+        .into_par_iter()
+        .flat_map(|y| (0..dimension.1).into_par_iter().map(move |x| (x, y)))
+        .map(move |pixel| calc_pixel(&pixel, dimension, horizontal_scale, offset))
+        .collect()
 }
 
 // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
